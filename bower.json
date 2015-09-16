@@ -1,0 +1,19 @@
+{
+  "name": "elRTE",
+  "version": "1.4.0",
+  "homepage": "https://github.com/guigouz/elRTE",
+  "authors": [
+    "Troex Nevelin <troex@fury.scancode.ru>"
+  ],
+  "moduleType": [
+    "globals"
+  ],
+  "license": "BSD",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
