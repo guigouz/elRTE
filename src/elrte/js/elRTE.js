@@ -15,7 +15,16 @@
  * Copyright: Studio 42, http://www.std42.ru
  */
 (function($) {
-
+	
+	// support jquery 1.9+
+	if(!$.browser) {
+		$.browser = {
+			msie: navigator.userAgent.indexOf('MSIE ') != -1,
+			safari: (navigator.userAgent.indexOf('Safari') != -1 && navigator.userAgent.indexOf('Chrome') == -1),
+			mozilla: navigator.appCodeName == 'Mozilla'
+		};
+	}
+	
 elRTE = function(target, opts) {
 	if (!target || !target.nodeName) {
 		return alert('elRTE: argument "target" is not DOM Element');
@@ -24,9 +33,9 @@ elRTE = function(target, opts) {
 	this.version   = '1.3';
 	this.build     = '2011-06-23';
 	this.options   = $.extend(true, {}, this.options, opts);
-	this.browser   = $.browser;
 	this.target    = $(target);
 	
+	this.browser   = $.browser;
 	this.lang      = (''+this.options.lang);
 	this._i18n     = new eli18n({textdomain : 'rte', messages : { rte : this.i18Messages[this.lang] || {}} });
 	this.rtl       = !!(/^(ar|fa|he)$/.test(this.lang) && this.i18Messages[this.lang]);
