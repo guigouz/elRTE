@@ -14,6 +14,7 @@ IMG=  ${DST}/images
 
 # YUI Compressor
 COMPRESSOR=	1
+
 COMPRESSOR_JS=	java -jar ../yuicompressor-2.4.8.jar \
 			--charset utf8 --type js --line-break 500 \
 			-o ${elrte_js_min} ${elrte_js}

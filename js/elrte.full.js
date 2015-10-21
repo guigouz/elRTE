@@ -744,16 +744,16 @@ function elDialogForm(o) {
 			} else {
 				b = '';
 				if (v.nodeName || v.css) {
-					if (!v.css) {
-						v = $(v);					
+					if (v.css) {
+						v = v.get(0);
 					}
-					b = v.css('border');
-					if ((b = v.css('border'))) {
+					b = v.style.border;
+					if (b) {
 						w = s = c = b;
 					} else {
-						w = v.css('border-width');
-						s = v.css('border-style');
-						c = v.css('border-color');
+						w = v.style.borderWidth;
+						s = v.style.borderStyle;
+						c = v.style.borderColor;
 					}
 
 				} else {
@@ -820,13 +820,13 @@ function elDialogForm(o) {
 				self[this].append('<option value="%">%</option>');
 			}
 		});
-		
+
 		this.empty().addClass(opts['class'])
-			.append(this.left).append(this.uleft).append(' x ')
-			.append(this.top).append(this.utop).append(' x ')
-			.append(this.right).append(this.uright).append(' x ')
+			.append(this.left).append(this.uleft).append(' ')
+			.append(this.top).append(this.utop).append(' ')
+			.append(this.right).append(this.uright).append(' ')
 			.append(this.bottom).append(this.ubottom);
-			
+
 		this.val = function(v) {
 			if (!v && v!=='') {
 				var l = parseNum(this.left.val());
@@ -1181,7 +1181,7 @@ elRTE = function(target, opts) {
 		var self = this;
 		if (this.options.resizable && $.fn.resizable) {
 			if (r) {
-				this.editor.resizable({handles : 'se', alsoResize : this.workzone, minWidth :300, minHeight : 200 }).bind('resize', self.updateHeight);
+				this.editor.resizable({handles : this.options.resizeHandle, alsoResize : this.workzone, minWidth :300, minHeight : 200 }).bind('resize', self.updateHeight);
 			} else {
 				this.editor.resizable('destroy').unbind('resize', self.updateHeight);
 			}
@@ -1238,6 +1238,9 @@ elRTE = function(target, opts) {
 	this.window = this.iframe.contentWindow;
 	this.doc    = this.iframe.contentWindow.document;
 	this.$doc   = $(this.doc);
+	if(!this.doc.body.firstChild) {
+		this.doc.body.appendChild(document.createTextNode(''));
+	}
 	
 	/* put content into iframe */
 	html = '<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />';
@@ -1486,6 +1489,9 @@ elRTE.prototype.val = function(v) {
 			if ($.browser.msie) {
 				this.doc.body.innerHTML = '<br />'+this.filter.wysiwyg(v);
 				this.doc.body.removeChild(this.doc.body.firstChild);
+				if(!this.doc.body.firstChild) {
+					this.doc.body.appendChild(document.createTextNode(''));
+				}
 			} else {
 				this.doc.body.innerHTML = this.filter.wysiwyg(v);
 			}
@@ -3192,6 +3198,7 @@ elRTE.prototype.options   = {
 	cssfiles        : [],
 	height          : null,
 	resizable       : true,
+	resizeHandle    : 'se',
 	lang            : 'en',
 	toolbar         : 'normal',
 	absoluteURLs    : true,
@@ -3238,7 +3245,7 @@ elRTE.prototype.options   = {
 		'superscript'         : 'Superscript',
 		'subscript'           : 'Subscript',
 		'justifyleft'         : 'Align left',
-		'justifyright'        : 'Ailgn right',
+		'justifyright'        : 'Align right',
 		'justifycenter'       : 'Align center',
 		'justifyfull'         : 'Align full',
 		'indent'              : 'Indent',
@@ -3296,7 +3303,7 @@ elRTE.prototype.options   = {
 		direction  : ['ltr', 'rtl'],
 		links      : ['link', 'unlink', 'anchor'],
 		images     : ['image'],
-		media      : ['image', 'flash'],		
+		media      : ['image', 'flash', 'embedmedia'],
 		tables     : ['table', 'tableprops', 'tablerm',  'tbrowbefore', 'tbrowafter', 'tbrowrm', 'tbcolbefore', 'tbcolafter', 'tbcolrm', 'tbcellprops', 'tbcellsmerge', 'tbcellsplit'],
 		elfinder   : ['elfinder'],
 		fullscreen : ['fullscreen', 'about']
@@ -4561,10 +4568,10 @@ elRTE.prototype.utils = function(rte) {
 		
 		if (s['background-image']) {
 			s.background = (s['background-color']+' ')||''+s['background-image']+' '+s['background-position']||'0 0'+' '+s['background-repeat']||'repeat';
+			delete s['background-color'];
 			delete s['background-image'];
-			delete['background-image'];
-			delete['background-position'];
-			delete['background-repeat'];
+			delete s['background-position'];
+			delete s['background-repeat'];
 		}
 		
 		if (s['margin-top'] && s['margin-right'] && s['margin-bottom'] && s['margin-left']) {
@@ -4692,7 +4699,8 @@ elRTE.prototype.utils = function(rte) {
 	
 }
 
-})(jQuery);/**
+})(jQuery);
+/**
  * @class w3cRange  - w3c text range emulation for "strange" browsers
  *
  * @param  elRTE  rte  объект-редактор
@@ -5487,6 +5495,98 @@ elRTE.prototype.ui.prototype.buttons.elfinder = function(rte, name) {
 }
 
 })(jQuery);
+(function($) {
+	var _matchEmbedUrl = function(url) {
+		var youtubeID = (url.match(/youtu\.be\/([^&\?]+)/) || url.match(/youtube.com\/watch\?(?:[^&]+&)*v=([^&\?]+)/) || [])[1];
+		if (youtubeID) {
+			return '//www.youtube.com/embed/'+youtubeID+'?wmode=transparent';
+		}
+
+		var vimeoID = (url.match(/vimeo\.com\/([\w\-]+)/) || [])[1];
+		if (vimeoID) {
+			return '//player.vimeo.com/video/'+vimeoID+'?wmode=transparent';
+		}
+
+		var rutubeId = (url.match(/rutube\.ru\/video\/([\w\-]+)/) || [])[1];
+		if (rutubeId) {
+			return '//rutube.ru/play/embed/'+rutubeId;
+		}
+
+		var instagramID = (url.match(/instagram\.com\/p\/([\w\-]+)/) || [])[1];
+		if (instagramID) {
+			return '//instagram.com/p/'+instagramID+'/embed/';
+		}
+
+		var vkMatch = url.match(/vk\.com\/video_ext\.php\?oid=(\w+)&id=(\w+)&hash=(\w+)/);
+		if (vkMatch) {
+			return '//vk.com/video_ext.php?oid='+vkMatch[1]+'&id='+vkMatch[2]+'&hash='+vkMatch[3]+'&hd=2';
+		}
+
+		return null;
+	};
+
+	elRTE.prototype.ui.prototype.buttons.embedmedia = function(rte, name) {
+		this.constructor.prototype.constructor.call(this, rte, name);
+
+		this.embedmedia_url = $('<input type="text" />').attr('name', 'embedmedia_url').attr('size', '40');
+		this.embedmedia_w = $('<input type="text" />').attr('name', 'embedmedia_w').attr('size', '12').val("560");
+		this.embedmedia_h = $('<input type="text" />').attr('name', 'embedmedia_h').attr('size', '12').val("315");
+		//antoinek: needs to be commented out to prevent the button to be active in fullscreen mode
+		//this.active  = true;
+		var self = this;
+
+		this.command = function() {
+			var opts, d;
+
+			opts = {
+				rtl : rte.rtl,
+				submit : function(e, d) {
+					e.stopPropagation();
+					e.preventDefault();
+					self.set(
+						d,
+						self.embedmedia_url.val(),
+						self.embedmedia_w.val(),
+						self.embedmedia_h.val()
+					);
+				},
+				dialog : {
+					width : 460,
+					title : this.rte.i18n('Insert Embedded Media (YouTube, Vimeo, Rutube, Instagram, VK)')
+				}
+			};
+
+			this.rte.selection.saveIERange();
+			d = new elDialogForm(opts);
+			d.append([this.rte.i18n('Media URL/code'), this.embedmedia_url.val('')], null, true);
+			d.append([this.rte.i18n('Width'), $('<span />').append(this.embedmedia_w).append(' px')], null, true);
+			d.append([this.rte.i18n('Height'), $('<span />').append(this.embedmedia_h).append(' px')], null, true);
+			d.open();
+			this.rte.ui.update(true);
+		};
+
+		this.update = function() {
+			this.domElem.removeClass('disabled active');
+		};
+
+		this.set = function(d, url, w, h) {
+			var embedHref = _matchEmbedUrl(url)
+			if (embedHref) {
+				var toinsert = '<iframe width="'+w+'" height="'+h+'" src="'+embedHref+'" frameborder="0" allowfullscreen="true"> </iframe>';
+				var id = 'embedmedia-'+Math.random().toString().substring(2);
+				this.rte.filter.scripts[id] = toinsert;
+				var img = '<img id="'+id+'" src="'+this.rte.filter.url+'pixel.gif" class="elrte-protected elrte-iframe" style="width:'+w+'; height:'+h+'">';
+
+				this.rte.history.add();
+				this.rte.selection.insertHtml(img);
+				d.close();
+			} else {
+				d.showError(this.rte.i18n('Unknown or incorrect media source URL'));
+			}
+		};
+	}
+})(jQuery);
+elRTE.prototype.options.buttons.embedmedia = 'Insert Embedded Media';
 (function($) {
 	
 	elRTE.prototype.ui.prototype.buttons.flash = function(rte, name) {
@@ -6558,10 +6658,11 @@ elRTE.prototype.ui.prototype.buttons.image = function(rte, name) {
 				},
 				dialog : {
 					autoOpen  : false,
-					width     : 500,
+					width     : 550,
+					minWidth  : 550,
 					position  : 'top',
 					title     : rte.i18n('Image'),
-					resizable : true,
+					resizable : false,
 					open      : function() {
 						$.fn.resizable && $(this).parents('.ui-dialog:first').resizable('option', 'alsoResize', '.elrte-image-preview');
 					}
@@ -6706,7 +6807,7 @@ elRTE.prototype.ui.prototype.buttons.image = function(rte, name) {
 		this.domElem.removeClass('disabled');
 		var n = this.rte.selection.getEnd(),
 			$n = $(n);
-		if (n.nodeName == 'IMG' && !$n.hasClass('elrte-protected')) {
+		if ($n.is('img') && !$n.hasClass('elrte-protected')) {
 			this.domElem.addClass('active');
 		} else {
 			this.domElem.removeClass('active');
@@ -6741,20 +6842,44 @@ elRTE.prototype.ui.prototype.buttons.indent = function(rte, name) {
 			var val = self.rte.dom.attr(n, 'style').indexOf(css) != -1 ? parseInt($(n).css(css))||0 : 0;
 			$(n).css(css, val+40+'px');
 		}
-		
-		for (var i=0; i < nodes.length; i++) {
+
+		for (var i = 0; i < nodes.length; i++) {
+			if (nodes[i].nodeName == 'BR') {
+				nodes[i] = nodes[i].parentNode;
+			}
+
 			if (/^(TABLE|THEAD|TFOOT|TBODY|COL|COLGROUP|TR)$/.test(nodes[i].nodeName)) {
-				$(nodes[i]).find('td,th').each(function() {
+				$(nodes[i]).find('td,th').each(function () {
 					indent(this);
 				});
 			} else if (/^LI$/.test(nodes[i].nodeName)) {
-				var n = $(nodes[i]);
-				$(this.rte.dom.create(nodes[i].parentNode.nodeName))
-					.append($(this.rte.dom.create('li')).html(n.html()||'')).appendTo(n.html('&nbsp;'));
+				var $node = $(nodes[i]),
+					$prevLi = $node.prev('li'),
+					$listParent, $list, $newNode;
+
+				if ($prevLi.length) {
+					$listParent = $prevLi;
+					$newNode = $node;
+				} else {
+					$listParent = $node;
+					$newNode = $(this.rte.dom.create('li')).html('&nbsp;');
+				}
+
+				$list = $listParent.find('ul,ol').first();
+				if ($list.length) {
+					$list.append($newNode);
+				} else {
+					$list = $newNode.find('ul,ol').first();
+					$list.length || ($list = $(this.rte.dom.create(nodes[i].parentNode.nodeName)));
+					$list.appendTo($listParent);
+					$list.prepend($newNode);
+				}
+				this.rte.selection.selectContents($newNode[0]);
+				console.log(nodes[i].parentNode.nodeName);
 			} else {
 				indent(nodes[i]);
 			}
-		};
+		}
 		this.rte.ui.update();
 	}
 	
@@ -7286,7 +7411,20 @@ elRTE.prototype.ui.prototype.buttons.outdent = function(rte, name) {
 		var v = this.find();
 		if (v.node) {
 			this.rte.history.add();
-			$(v.node).css(v.type, (v.val>40 ? v.val-40 : 0)+'px');
+			var $node = $(v.node);
+			if (v.type == "list") {
+				var $myPar = $node.parent();
+				var imFirst = !$node.prev().length;
+				$node.insertAfter($myPar.parent());
+				if (!$myPar.children().length) {
+					$myPar.remove();
+				} else if (imFirst) {
+					$myPar.appendTo($node);
+				}
+				this.rte.selection.selectContents(v.node);
+			} else {
+				$node.css(v.type, (v.val > 40 ? v.val - 40 : 0) + 'px');
+			}
 			this.rte.ui.update();
 		}
 	}
@@ -7301,6 +7439,10 @@ elRTE.prototype.ui.prototype.buttons.outdent = function(rte, name) {
 					: (s.indexOf('margin-left') != -1 ? 'margin-left' : '');
 				ret.val = ret.type ? parseInt($(n).css(ret.type))||0 : 0;
 			}
+			if (n.nodeName == "LI" && (!$(n).next().length || !$(n).prev().length) && (n.parentNode.nodeName == "UL" || n.parentNode.nodeName == "OL") && $(n.parentNode).parent().is('li')) {
+				ret.type = "list";
+				ret.val = 1;
+			}
 			return ret;
 		}
 		
@@ -7313,8 +7455,9 @@ elRTE.prototype.ui.prototype.buttons.outdent = function(rte, name) {
 				ret = checkNode(this);
 				if (ret.val) {
 					ret.node = this;
-					return ret;
+					return false;
 				}
+				return true;
 			})
 		}
 		return ret;
@@ -7738,7 +7881,9 @@ elRTE.prototype.ui.prototype.buttons.table = function(rte, name) {
 		} else {
 			this.table = n ? $(n) : $(this.rte.doc.createElement('table'));					
 		}
-		
+
+		var t = this.table.get(0);
+
 		!this.src && init();
 		this.src.main.border.elBorderSelect({styleHeight : 117});
 		this.src.main.bg.elColorPicker({palettePosition : 'outer', 'class' : 'el-colorpicker ui-icon ui-icon-pencil'});
@@ -7752,21 +7897,21 @@ elRTE.prototype.ui.prototype.buttons.table = function(rte, name) {
 			this.src.main.cols.val(2).removeAttr('disabled');
 		}
 		
-		var w = this.table.css('width') || this.table.attr('width');
+		var w = t.style.width || this.table.attr('width') || '';
 		this.src.main.width.val(parseInt(w)||'');
 		this.src.main.wunit.val(w.indexOf('px') != -1 ? 'px' : '%');
 		
-		var h = this.table.css('height') || this.table.attr('height');	
+		var h = t.style.height || this.table.attr('height') || '';
 		this.src.main.height.val(parseInt(h)||'');
 		this.src.main.hunit.val(h && h.indexOf('px') != -1 ? 'px' : '%');
 
-		var f = this.table.css('float');
+		var f = t.style['float'] || '';
 		this.src.main.align.val('');
 		if (f == 'left' || f == 'right') {
 			this.src.main.align.val(f);
 		} else {
-			var ml = this.table.css('margin-left');
-			var mr = this.table.css('margin-right');
+			var ml = t.style.marginLeft||'';
+			var mr = t.style.marginRight||'';
 			if (ml == 'auto' && mr == 'auto') {
 				this.src.main.align.val('center');
 			}
@@ -7776,8 +7921,8 @@ elRTE.prototype.ui.prototype.buttons.table = function(rte, name) {
 		//this.src.main.frame.val(this.table.attr('frame'));
 		this.src.main.rules.val(this.rte.dom.attr(this.table.get(0), 'rules'));
 
-		this.src.main.bg.val(this.table.css('background-color'));
-		var bgimg = (this.table.css('background-image')||'').replace(/url\(([^\)]+)\)/i, "$1");
+		this.src.main.bg.val(t.style.backgroundColor||'');
+		var bgimg = (t.style.backgroundImage||'').replace(/url\(([^\)]+)\)/i, "$1");
 		this.src.main.bgimg.val(bgimg!='none' ? bgimg : '');
 
 		var opts = {
@@ -7815,7 +7960,7 @@ elRTE.prototype.ui.prototype.buttons.table = function(rte, name) {
 					.append([this.rte.i18n('Background'),    $('<span />').append($('<span />').css({'float' : 'left', 'margin-right' : '3px'}).append(this.src.main.bg)).append(this.src.main.bgimg)], 'main', true)
 			} else {
 				for (var name in this.src[tab]) {
-					var v = this.rte.dom.attr(this.table, name);
+					var v = this.rte.dom.attr(t, name);
 					if (tab == 'events') {
 						v = this.rte.utils.trimEventCallback(v);
 					} 
