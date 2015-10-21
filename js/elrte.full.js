@@ -1186,7 +1186,7 @@ elRTE = function(target, opts) {
 				this.editor.resizable('destroy').unbind('resize', self.updateHeight);
 			}
 		}
-	}
+	};
 	
 	/* attach editor to document */
 	this.editor.insertAfter(target);
@@ -1445,7 +1445,7 @@ elRTE = function(target, opts) {
  **/
 elRTE.prototype.i18n = function(msg) {
 	return this._i18n.translate(msg);
-}
+};
 
 
 
@@ -1465,15 +1465,15 @@ elRTE.prototype.open = function() {
  **/
 elRTE.prototype.close = function() {
 	this.editor.hide();
-}
+};
 
 elRTE.prototype.updateEditor = function() {
 	this.val(this.source.val());
-}
+};
 
 elRTE.prototype.updateSource = function() {
 	this.source.val(this.filter.source($(this.doc.body).html()));
-}
+};
 
 /**
  * Return edited text
@@ -1504,11 +1504,11 @@ elRTE.prototype.val = function(v) {
 			return $.trim(this.filter.source($(this.doc.body).html()));
 		}
 	}
-}
+};
 
 elRTE.prototype.beforeSave = function() {
 	this.source.val($.trim(this.val())||'');
-}
+};
 
 /**
  * Submit form
@@ -1518,14 +1518,14 @@ elRTE.prototype.beforeSave = function() {
 elRTE.prototype.save = function() {
 	this.beforeSave();
 	this.editor.parents('form').submit();
-}
+};
 
 elRTE.prototype.log = function(msg) {
 	if (window.console && window.console.log) {
 		window.console.log(msg);
 	}
         
-}
+};
 
 elRTE.prototype.i18Messages = {};
 
@@ -1559,7 +1559,7 @@ $.fn.elrte = function(o, v) {
 		} else if (this.length == 1) {
 			return v || v === '' ? this[0].elrte.val(v) : this[0].elrte.val();
 		} else {
-			ret = {}
+			ret = {};
 			this.each(function() {
 				ret[this.elrte.source.attr('name')] = this.elrte.val();
 			});
@@ -1567,7 +1567,7 @@ $.fn.elrte = function(o, v) {
 		}
 	}
 	return this;
-}
+};
 
 })(jQuery);
 /*
@@ -6664,7 +6664,8 @@ elRTE.prototype.ui.prototype.buttons.image = function(rte, name) {
 					title     : rte.i18n('Image'),
 					resizable : false,
 					open      : function() {
-						$.fn.resizable && $(this).parents('.ui-dialog:first').resizable('option', 'alsoResize', '.elrte-image-preview');
+						//$.fn.resizable && $(this).parents('.ui-dialog:first').resizable('option', 'alsoResize', '.elrte-image-preview');
+						$.fn.resizable && $(this).parents('.ui-dialog:first').resizable({ alsoResize: '.elrte-image-preview'});
 					}
 				}
 			},

@@ -268,7 +268,8 @@ elRTE.prototype.ui.prototype.buttons.image = function(rte, name) {
 					title     : rte.i18n('Image'),
 					resizable : false,
 					open      : function() {
-						$.fn.resizable && $(this).parents('.ui-dialog:first').resizable('option', 'alsoResize', '.elrte-image-preview');
+						//$.fn.resizable && $(this).parents('.ui-dialog:first').resizable('option', 'alsoResize', '.elrte-image-preview');
+						$.fn.resizable && $(this).parents('.ui-dialog:first').resizable({ alsoResize: '.elrte-image-preview'});
 					}
 				}
 			},
